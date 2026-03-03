@@ -1,0 +1,152 @@
+<!-- pages/register.html — Institution Registration with OTP Verification -->
+
+<div id="register" class="screen">
+  <div class="auth-page">
+    <div style="width:640px">
+      <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+      <div class="auth-box" style="width:100%">
+        <div class="auth-header">
+          <div class="icon">🏛️</div>
+          <div>
+            <h2>Institution Registration</h2>
+            <p>Register your institution on AICTE Portal</p>
+          </div>
+        </div>
+
+        <!-- STEP INDICATOR -->
+        <div style="display:flex;align-items:center;padding:16px 32px;border-bottom:1px solid var(--border);gap:0">
+          <div id="step1-indicator" style="display:flex;align-items:center;gap:8px;flex:1">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--saffron);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">1</div>
+            <span style="font-size:12px;font-weight:700;color:var(--saffron)">Institution Details</span>
+          </div>
+          <div style="flex:1;height:2px;background:var(--gray-200)" id="step-divider"></div>
+          <div id="step2-indicator" style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
+            <div id="step2-num" style="width:28px;height:28px;border-radius:50%;background:var(--gray-300);color:var(--gray-700);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">2</div>
+            <span id="step2-label" style="font-size:12px;font-weight:700;color:var(--gray-500)">Verify Email OTP</span>
+          </div>
+        </div>
+
+        <!-- ─── STEP 1: REGISTRATION FORM ─── -->
+        <div id="reg-step1" class="auth-body">
+          <div id="regErr" class="alert-banner danger" style="display:none"></div>
+
+          <div class="form-row">
+            <div class="form-group"><label>Institution Name *</label><input id="regName" placeholder="e.g. VVIT Guntur"></div>
+            <div class="form-group"><label>AICTE Institute ID</label><input id="regAicteId" placeholder="1-123456789"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Institution Type *</label>
+              <select id="regType">
+                <option>Engineering</option><option>Pharmacy</option>
+                <option>MBA/Management</option><option>Architecture</option><option>MCA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category *</label>
+              <select id="regCategory">
+                <option>Affiliated</option><option>Autonomous</option>
+                <option>Deemed University</option><option>University</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Year of Establishment *</label><input id="regYear" type="number" placeholder="1998"></div>
+            <div class="form-group"><label>Affiliated University *</label><input id="regUniv" placeholder="e.g. JNTUK"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>State *</label>
+              <select id="regState">
+                <option>Andhra Pradesh</option><option>Telangana</option><option>Karnataka</option>
+                <option>Maharashtra</option><option>Tamil Nadu</option><option>Gujarat</option>
+                <option>Kerala</option><option>Rajasthan</option>
+              </select>
+            </div>
+            <div class="form-group"><label>District *</label><input id="regDistrict" placeholder="Enter district"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Pincode</label><input id="regPincode" placeholder="522508"></div>
+            <div class="form-group"><label>Principal Name *</label><input id="regPrincipal" placeholder="Dr. Full Name"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Mobile</label><input id="regMobile" placeholder="+91 XXXXXXXXXX"></div>
+            <div class="form-group"><label>Password *</label><input id="regPass" type="password" placeholder="Min 8 characters"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Confirm Password *</label><input id="regCpass" type="password" placeholder="Re-enter password"></div>
+            <div class="form-group"></div>
+          </div>
+
+          <!-- EMAIL + SEND OTP ROW -->
+          <div class="form-group">
+            <label>Contact Email * <span style="font-size:10px;color:var(--saffron);font-weight:700">(OTP will be sent here)</span></label>
+            <div style="display:flex;gap:8px">
+              <input id="regEmail" type="email" placeholder="principal@inst.ac.in" style="flex:1">
+              <button id="sendOtpBtn" onclick="sendOTP()" class="btn btn-saffron" style="white-space:nowrap;padding:10px 16px;font-size:13px">
+                📧 Send OTP
+              </button>
+            </div>
+            <div id="otpSentMsg" style="display:none;margin-top:6px;font-size:12px;color:var(--green-india);font-weight:600">
+              ✅ OTP sent! Check your inbox (also check spam folder).
+            </div>
+          </div>
+
+          <button class="btn btn-saffron btn-block" id="proceedBtn" onclick="proceedToOTP()" style="margin-top:4px">
+            PROCEED TO VERIFY EMAIL →
+          </button>
+        </div>
+
+        <!-- ─── STEP 2: OTP VERIFICATION ─── -->
+        <div id="reg-step2" style="display:none" class="auth-body">
+          <div class="alert-banner info">
+            📧 We've sent a 6-digit OTP to <b id="otpEmailDisplay">—</b>. Enter it below to complete registration.
+          </div>
+          <div id="otpErr" class="alert-banner danger" style="display:none"></div>
+
+          <!-- OTP INPUT BOXES -->
+          <div class="form-group" style="text-align:center">
+            <label style="text-align:left;display:block">Enter 6-Digit OTP *</label>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:8px" id="otpBoxes">
+              <input class="otp-box" id="otp0" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,0)" oninput="otpInput(event,0)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              <input class="otp-box" id="otp1" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,1)" oninput="otpInput(event,1)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              <input class="otp-box" id="otp2" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,2)" oninput="otpInput(event,2)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              <input class="otp-box" id="otp3" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,3)" oninput="otpInput(event,3)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              <input class="otp-box" id="otp4" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,4)" oninput="otpInput(event,4)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              <input class="otp-box" id="otp5" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"
+                onkeyup="otpKeyUp(event,5)" oninput="otpInput(event,5)"
+                style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            </div>
+          </div>
+
+          <!-- RESEND OTP with countdown -->
+          <div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--gray-500)">
+            Didn't receive OTP?
+            <span id="resendCountdown" style="font-weight:700;color:var(--amber)"> Resend in <span id="countdownSec">30</span>s</span>
+            <a id="resendLink" onclick="resendOTP()" style="display:none;color:var(--saffron);cursor:pointer;font-weight:700"> Resend OTP</a>
+          </div>
+
+          <button class="btn btn-green btn-block" id="verifyRegBtn" onclick="verifyOTPAndRegister()">
+            ✅ VERIFY & COMPLETE REGISTRATION
+          </button>
+          <button class="btn btn-outline btn-block" onclick="backToStep1()"
+            style="margin-top:10px;color:var(--navy);border-color:var(--border)">
+            ← Back to Edit Details
+          </button>
+        </div>
+
+        <div class="auth-footer">Already registered? <a onclick="showScreen('login')">Login Here</a></div>
+      </div>
+    </div>
+  </div>
+</div>

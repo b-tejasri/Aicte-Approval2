@@ -1,0 +1,64 @@
+<!-- pages/login.html — Institution Login & Authority Login screens -->
+
+<!-- INSTITUTION LOGIN -->
+<div id="login" class="screen">
+  <div class="auth-page">
+    <div style="width:480px">
+      <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+      <div class="auth-box">
+        <div class="auth-header">
+          <div class="icon">🔐</div>
+          <div><h2>Institution Login</h2><p>AICTE Approval & Compliance System</p></div>
+        </div>
+        <div style="padding:0 32px 8px">
+          <div class="auth-tabs">
+            <div class="auth-tab active" id="tab-inst" onclick="switchTab('institution')">Institution</div>
+            <div class="auth-tab" id="tab-auth" onclick="switchTab('authority')">Authority</div>
+          </div>
+        </div>
+        <div class="auth-body">
+          <div class="alert-banner info">ℹ️ Enter your registered email and password.</div>
+          <div id="loginErr" class="alert-banner danger" style="display:none"></div>
+          <div class="form-group">
+            <label>Email ID</label>
+            <input type="email" id="loginEmail" placeholder="principal@institution.ac.in">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPass" placeholder="••••••••">
+          </div>
+          <button class="btn btn-saffron btn-block" id="loginBtn" onclick="doLogin()">LOGIN →</button>
+        </div>
+        <div class="auth-footer">New Institution? <a onclick="showScreen('register')">Register Here</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTHORITY LOGIN -->
+<div id="auth-login" class="screen">
+  <div class="auth-page">
+    <div style="width:480px">
+      <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+      <div class="auth-box">
+        <div class="auth-header" style="background:var(--green-india)">
+          <div class="icon">🔍</div>
+          <div><h2>Authority Login</h2><p>AICTE Regional Review System</p></div>
+        </div>
+        <div class="auth-body">
+          <div class="alert-banner info">ℹ️ Demo: <b>reviewer@aicte-india.org</b> / <b>demo1234</b></div>
+          <div id="authLoginErr" class="alert-banner danger" style="display:none"></div>
+          <div class="form-group">
+            <label>Official Email ID</label>
+            <input type="email" id="authEmail" value="reviewer@aicte-india.org">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="authPass" value="demo1234">
+          </div>
+          <button class="btn btn-green btn-block" id="authLoginBtn" onclick="doAuthorityLogin()">LOGIN →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

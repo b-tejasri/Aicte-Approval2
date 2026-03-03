@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AICTE Approval & Compliance System</title>
+
+  <!-- ── Google Fonts ── -->
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- ── Chart.js ── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+  <!-- ── Stylesheet ── -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!--
+  ═══════════════════════════════════════════════════════
+   PAGE STRUCTURE
+   ─────────────────────────────────────────────────────
+   pages/
+     landing.html          → Landing / home screen
+     login.html            → Institution login + Authority login
+     register.html         → Institution registration + OTP
+     app-shell.html        → Top bar, both sidebars, modal, footer
+     institution-pages.html → All institution portal pages
+     authority-pages.html  → All authority portal pages
+
+   css/
+     styles.css            → All styles & CSS variables
+
+   js/
+     config.js             → API URL, global state, constants
+     utils.js              → showToast, showErr, navTo, enterApp, doLogout
+     auth.js               → sendOTP, login, register, OTP verify
+     dashboard.js          → loadDashboard + all render helpers
+     upload.js             → buildUploadGrid, handleFileSelected, submitForApproval, downloadExcel
+     institution.js        → loadDisclosures, loadAIRisk, loadApprovalStatus, loadNotifications, loadProfile
+     authority.js          → loadAuthorityData, loadPendingReviews, openReviewModal, submitReview, analytics
+  ═══════════════════════════════════════════════════════
+  -->
+
+  <!-- ── SCREEN: Landing ── -->
+  <div id="landing" class="screen active">
+    <div class="tricolor-bar"></div>
+    <div class="emblem-header">
+      <span>🇮🇳</span>
+      <span>GOVERNMENT OF INDIA — MINISTRY OF EDUCATION</span>
+      <span style="margin-left:auto">Screen Reader | हिन्दी | Help</span>
+    </div>
+    <div class="landing-nav">
+      <div class="logo-section">
+        <div class="emblem-circle">⚖️</div>
+        <div class="logo-text">
+          <h1>AICTE PORTAL</h1>
+          <p>ALL INDIA COUNCIL FOR TECHNICAL EDUCATION</p>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn btn-outline" onclick="showScreen('login')">Sign In</button>
+        <button class="btn btn-saffron" onclick="showScreen('register')">Register Institution</button>
+      </div>
+    </div>
+    <div class="landing-hero">
+      <h2>AICTE <span>Approval</span> &<br>Compliance System</h2>
+      <p>A unified digital platform for mandatory disclosures, AI-powered compliance monitoring, and authority review — ensuring transparency in technical education.</p>
+      <div class="portal-cards">
+        <div class="portal-card" onclick="showScreen('login')">
+          <div class="icon">🏛️</div>
+          <h3>Institution Portal</h3>
+          <p>Register, upload mandatory disclosure PDFs, get AI risk analysis, submit for approval, and track status.</p>
+          <button class="btn btn-saffron btn-block">Login as Institution</button>
+        </div>
+        <div class="portal-card" onclick="showScreen('auth-login')">
+          <div class="icon">🔍</div>
+          <h3>Authority Portal</h3>
+          <p>Review institution applications, analyze risk reports, and issue approvals or rejections.</p>
+          <button class="btn btn-green btn-block">Login as Authority</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-item"><div class="num">11,200+</div><div class="lbl">Approved Institutions</div></div>
+      <div class="stat-item"><div class="num">38</div><div class="lbl">States & UTs</div></div>
+      <div class="stat-item"><div class="num">2.4L+</div><div class="lbl">Applications Processed</div></div>
+      <div class="stat-item"><div class="num">98.2%</div><div class="lbl">Digital Compliance</div></div>
+      <div class="stat-item"><div class="num">847</div><div class="lbl">AI Flags Resolved</div></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: Institution Login ── -->
+  <div id="login" class="screen">
+    <div class="auth-page">
+      <div style="width:480px">
+        <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+        <div class="auth-box">
+          <div class="auth-header">
+            <div class="icon">🔐</div>
+            <div><h2>Institution Login</h2><p>AICTE Approval & Compliance System</p></div>
+          </div>
+          <div style="padding:0 32px 8px">
+            <div class="auth-tabs">
+              <div class="auth-tab active" id="tab-inst" onclick="switchTab('institution')">Institution</div>
+              <div class="auth-tab" id="tab-auth" onclick="switchTab('authority')">Authority</div>
+            </div>
+          </div>
+          <div class="auth-body">
+            <div class="alert-banner info">ℹ️ Enter your registered email and password.</div>
+            <div id="loginErr" class="alert-banner danger" style="display:none"></div>
+            <div class="form-group">
+              <label>Email ID</label>
+              <input type="email" id="loginEmail" placeholder="principal@institution.ac.in">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="loginPass" placeholder="••••••••">
+            </div>
+            <button class="btn btn-saffron btn-block" id="loginBtn" onclick="doLogin()">LOGIN →</button>
+          </div>
+<!-- Replace the existing auth-footer in #login with this -->
+<div class="auth-footer">
+  <a onclick="openForgotModal()" style="color:var(--amber)">Forgot Password?</a>
+  &nbsp;|&nbsp;
+  New Institution? <a onclick="showScreen('register')">Register Here</a>
+</div>        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: Authority Login ── -->
+  <div id="auth-login" class="screen">
+    <div class="auth-page">
+      <div style="width:480px">
+        <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+        <div class="auth-box">
+          <div class="auth-header" style="background:var(--green-india)">
+            <div class="icon">🔍</div>
+            <div><h2>Authority Login</h2><p>AICTE Regional Review System</p></div>
+          </div>
+          <div class="auth-body">
+            <div class="alert-banner info">ℹ️ Demo: <b>reviewer@aicte-india.org</b> / <b>demo1234</b></div>
+            <div id="authLoginErr" class="alert-banner danger" style="display:none"></div>
+            <div class="form-group">
+              <label>Official Email ID</label>
+              <input type="email" id="authEmail" value="reviewer@aicte-india.org">
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="authPass" value="demo1234">
+            </div>
+            <button class="btn btn-green btn-block" id="authLoginBtn" onclick="doAuthorityLogin()">LOGIN →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: Register ── -->
+  <div id="register" class="screen">
+    <div class="auth-page">
+      <div style="width:640px">
+        <div class="back-link" onclick="showScreen('landing')">← Back to Portal Home</div>
+        <div class="auth-box" style="width:100%">
+          <div class="auth-header">
+            <div class="icon">🏛️</div>
+            <div><h2>Institution Registration</h2><p>Register your institution on AICTE Portal</p></div>
+          </div>
+
+          <!-- Step Indicator -->
+          <div style="display:flex;align-items:center;padding:16px 32px;border-bottom:1px solid var(--border);gap:0">
+            <div id="step1-indicator" style="display:flex;align-items:center;gap:8px;flex:1">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--saffron);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">1</div>
+              <span style="font-size:12px;font-weight:700;color:var(--saffron)">Institution Details</span>
+            </div>
+            <div style="flex:1;height:2px;background:var(--gray-200)" id="step-divider"></div>
+            <div id="step2-indicator" style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
+              <div id="step2-num" style="width:28px;height:28px;border-radius:50%;background:var(--gray-300);color:var(--gray-700);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">2</div>
+              <span id="step2-label" style="font-size:12px;font-weight:700;color:var(--gray-500)">Verify Email OTP</span>
+            </div>
+          </div>
+
+          <!-- Step 1: Form -->
+          <div id="reg-step1" class="auth-body">
+            <div id="regErr" class="alert-banner danger" style="display:none"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Institution Name *</label><input id="regName" placeholder="e.g. VVIT Guntur"></div>
+              <div class="form-group"><label>AICTE Institute ID</label><input id="regAicteId" placeholder="1-123456789"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Institution Type *</label>
+                <select id="regType"><option>Engineering</option><option>Pharmacy</option><option>MBA/Management</option><option>Architecture</option><option>MCA</option></select>
+              </div>
+              <div class="form-group"><label>Category *</label>
+                <select id="regCategory"><option>Affiliated</option><option>Autonomous</option><option>Deemed University</option><option>University</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Year of Establishment *</label><input id="regYear" type="number" placeholder="1998"></div>
+              <div class="form-group"><label>Affiliated University *</label><input id="regUniv" placeholder="e.g. JNTUK"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>State *</label>
+                <select id="regState">
+                  <option>Andhra Pradesh</option><option>Telangana</option><option>Karnataka</option>
+                  <option>Maharashtra</option><option>Tamil Nadu</option><option>Gujarat</option>
+                  <option>Kerala</option><option>Rajasthan</option>
+                </select>
+              </div>
+              <div class="form-group"><label>District *</label><input id="regDistrict" placeholder="Enter district"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Pincode</label><input id="regPincode" placeholder="522508"></div>
+              <div class="form-group"><label>Principal Name *</label><input id="regPrincipal" placeholder="Dr. Full Name"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Mobile</label><input id="regMobile" placeholder="+91 XXXXXXXXXX"></div>
+              <div class="form-group"><label>Password *</label><input id="regPass" type="password" placeholder="Min 8 characters"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Confirm Password *</label><input id="regCpass" type="password" placeholder="Re-enter password"></div>
+              <div class="form-group"></div>
+            </div>
+            <div class="form-group">
+              <label>Contact Email * <span style="font-size:10px;color:var(--saffron);font-weight:700">(OTP will be sent here)</span></label>
+              <div style="display:flex;gap:8px">
+                <input id="regEmail" type="email" placeholder="principal@inst.ac.in" style="flex:1">
+                <button id="sendOtpBtn" onclick="sendOTP()" class="btn btn-saffron" style="white-space:nowrap;padding:10px 16px;font-size:13px">📧 Send OTP</button>
+              </div>
+              <div id="otpSentMsg" style="display:none;margin-top:6px;font-size:12px;color:var(--green-india);font-weight:600">✅ OTP sent! Check your inbox (also check spam folder).</div>
+            </div>
+            <button class="btn btn-saffron btn-block" id="proceedBtn" onclick="proceedToOTP()" style="margin-top:4px">PROCEED TO VERIFY EMAIL →</button>
+          </div>
+
+          <!-- Step 2: OTP -->
+          <div id="reg-step2" style="display:none" class="auth-body">
+            <div class="alert-banner info">📧 We've sent a 6-digit OTP to <b id="otpEmailDisplay">—</b>. Enter it below to complete registration.</div>
+            <div id="otpErr" class="alert-banner danger" style="display:none"></div>
+            <div class="form-group" style="text-align:center">
+              <label style="text-align:left;display:block">Enter 6-Digit OTP *</label>
+              <div style="display:flex;gap:10px;justify-content:center;margin-top:8px" id="otpBoxes">
+                <input class="otp-box" id="otp0" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,0)" oninput="otpInput(event,0)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+                <input class="otp-box" id="otp1" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,1)" oninput="otpInput(event,1)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+                <input class="otp-box" id="otp2" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,2)" oninput="otpInput(event,2)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+                <input class="otp-box" id="otp3" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,3)" oninput="otpInput(event,3)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+                <input class="otp-box" id="otp4" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,4)" oninput="otpInput(event,4)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+                <input class="otp-box" id="otp5" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" onkeyup="otpKeyUp(event,5)" oninput="otpInput(event,5)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+              </div>
+            </div>
+            <div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--gray-500)">
+              Didn't receive OTP?
+              <span id="resendCountdown" style="font-weight:700;color:var(--amber)"> Resend in <span id="countdownSec">30</span>s</span>
+              <a id="resendLink" onclick="resendOTP()" style="display:none;color:var(--saffron);cursor:pointer;font-weight:700"> Resend OTP</a>
+            </div>
+            <button class="btn btn-green btn-block" id="verifyRegBtn" onclick="verifyOTPAndRegister()">✅ VERIFY & COMPLETE REGISTRATION</button>
+            <button class="btn btn-outline btn-block" onclick="backToStep1()" style="margin-top:10px;color:var(--navy);border-color:var(--border)">← Back to Edit Details</button>
+          </div>
+
+          <div class="auth-footer">Already registered? <a onclick="showScreen('login')">Login Here</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       MAIN APP (top bar + sidebars + all pages)
+  ════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="top-logo">⚖️ AICTE <span>PORTAL</span></div>
+        <div class="role-badge" id="roleBadge">INSTITUTION</div>
+      </div>
+      <div class="top-bar-right">
+        <div class="top-icon" onclick="navTo('notifications')" title="Notifications">
+          🔔 <span id="notifBadgeTop" style="display:none;background:var(--red-flag);color:#fff;border-radius:50%;padding:1px 5px;font-size:10px"></span>
+        </div>
+        <div class="user-pill">
+          <div class="user-avatar" id="userAvatarTop">?</div>
+          <div class="user-name" id="userNameTop">Loading...</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+      </div>
+    </div>
+
+    <div class="app-body">
+
+      <!-- Institution Sidebar -->
+      <div class="sidebar" id="inst-sidebar">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--gray-500);margin-bottom:3px">Logged in as</div>
+          <div style="font-weight:700;color:var(--navy);font-size:13px" id="sidebarInstName">—</div>
+          <div style="font-size:11px;color:var(--gray-500)" id="sidebarAicteId">—</div>
+        </div>
+        <div style="padding:10px 12px;border-bottom:1px solid var(--gray-200)">
+          <div id="sidebarRiskCard" style="background:#FFF5EE;border:1px solid #FFD7B5;border-radius:6px;padding:10px;display:none">
+            <div style="font-size:10px;font-weight:700;color:var(--saffron);margin-bottom:2px">⚡ AI RISK SCORE</div>
+            <div style="font-family:'Rajdhani';font-size:26px;font-weight:700" id="sidebarRiskScore">—</div>
+            <div style="font-size:11px;color:var(--gray-500)" id="sidebarRiskLevel">—</div>
+          </div>
+          <div id="sidebarApprovalCard" style="margin-top:8px;display:none;border-radius:6px;padding:10px;border:1px solid">
+            <div style="font-size:10px;font-weight:700;margin-bottom:2px" id="sidebarApprovalLabel">APPROVAL STATUS</div>
+            <div style="font-family:'Rajdhani';font-size:15px;font-weight:700" id="sidebarApprovalStatus">—</div>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Institution Menu</div>
+          <div class="nav-item active" onclick="navTo('inst-dashboard')"><span class="ni">📊</span> Dashboard</div>
+          <div class="nav-item" onclick="navTo('upload-disclosures')"><span class="ni">📁</span> Upload Disclosures</div>
+          <div class="nav-item" onclick="navTo('my-disclosures')"><span class="ni">📋</span> My Disclosures</div>
+          <div class="nav-item" onclick="navTo('ai-risk')"><span class="ni">🤖</span> AI Risk Report</div>
+          <div class="nav-item" onclick="navTo('approval-status')"><span class="ni">📝</span> Approval Status</div>
+          <div class="nav-item" onclick="navTo('notifications')"><span class="ni">🔔</span> Notifications</div>
+          <div class="nav-item" onclick="navTo('profile')"><span class="ni">🏛️</span> Profile</div>
+        </div>
+      </div>
+
+      <!-- Authority Sidebar -->
+      <div class="sidebar" id="auth-sidebar" style="display:none">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--gray-500);margin-bottom:3px">Reviewer</div>
+          <div style="font-weight:700;color:var(--navy);font-size:13px" id="authSidebarName">—</div>
+          <div style="font-size:11px;color:var(--gray-500)">AICTE Authority Portal</div>
+        </div>
+        <div style="padding:10px 12px;border-bottom:1px solid var(--gray-200)">
+          <div id="authPendingBadge" style="background:#FFF3CD;border:1px solid var(--amber);border-radius:6px;padding:8px;text-align:center;display:none">
+            <div style="font-size:10px;font-weight:700;color:var(--amber)">PENDING REVIEWS</div>
+            <div style="font-family:'Rajdhani';font-size:24px;font-weight:700;color:var(--amber)" id="authPendingCount">0</div>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Authority Menu</div>
+          <div class="nav-item active" onclick="navTo('auth-dashboard')"><span class="ni">📊</span> Dashboard</div>
+          <div class="nav-item" onclick="navTo('auth-pending')"><span class="ni">📋</span> Pending Reviews</div>
+          <div class="nav-item" onclick="navTo('auth-institutions')"><span class="ni">🏛️</span> All Institutions</div>
+          <div class="nav-item" onclick="navTo('auth-analytics')"><span class="ni">📈</span> Analytics</div>
+        </div>
+      </div>
+
+      <!-- ════ MAIN CONTENT ════ -->
+      <div class="main-content">
+
+        <!-- Institution Dashboard -->
+        <div class="page active" id="page-inst-dashboard">
+          <div class="page-header-row">
+            <div class="page-header"><h2>Institution Dashboard</h2><p id="dashSubtitle">Loading your institution data...</p></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-navy btn-sm" onclick="downloadExcel()">📥 Download Report</button>
+              <button class="btn btn-saffron btn-sm" id="submitApprovalBtn" onclick="submitForApproval()" style="display:none">📨 Submit for Approval</button>
+            </div>
+          </div>
+          <div id="dashApprovalBanner"></div>
+          <div id="dashAlert" style="display:none"></div>
+          <div class="stats-grid">
+            <div class="stat-card blue"><div class="sc-label">Sections Uploaded</div><div class="sc-value" id="ds-uploads">0</div><div class="sc-sub">of 6 sections</div><div class="sc-icon">📁</div></div>
+            <div class="stat-card green"><div class="sc-label">Total Students</div><div class="sc-value" id="ds-students">—</div><div class="sc-sub">From PDF data</div><div class="sc-icon">👨‍🎓</div></div>
+            <div class="stat-card orange"><div class="sc-label">Total Faculty</div><div class="sc-value" id="ds-faculty">—</div><div class="sc-sub">From PDF data</div><div class="sc-icon">👨‍🏫</div></div>
+            <div class="stat-card gold"><div class="sc-label">Total Labs</div><div class="sc-value" id="ds-labs">—</div><div class="sc-sub">From PDF data</div><div class="sc-icon">🔬</div></div>
+            <div class="stat-card amber"><div class="sc-label">AI Risk Score</div><div class="sc-value" id="ds-risk">—</div><div class="sc-sub" id="ds-risk-level">Not Analyzed</div><div class="sc-icon">🤖</div></div>
+            <div class="stat-card purple"><div class="sc-label">Approval Probability</div><div class="sc-value" id="ds-approval-prob">—</div><div class="sc-sub">Based on compliance</div><div class="sc-icon">📊</div></div>
+          </div>
+          <div class="charts-grid">
+            <div class="card"><div class="card-header"><h3>Section-wise Compliance</h3></div><div class="card-body" id="dashSectionBody"><div style="color:var(--gray-500);font-size:13px">Upload PDFs to see section scores.</div></div></div>
+            <div class="card"><div class="card-header"><h3>Infrastructure Summary</h3></div><div class="card-body" id="dashInfraBody"><div style="color:var(--gray-500);font-size:13px">Upload infrastructure PDF to see details.</div></div></div>
+          </div>
+          <div class="charts-grid">
+            <div class="card"><div class="card-header"><h3>Faculty Compliance Statistics</h3></div><div class="card-body" id="dashFacultyStats"><div style="color:var(--gray-500);font-size:12px">Upload faculty PDF to see statistics.</div></div></div>
+            <div class="card"><div class="card-header"><h3>Accreditation & Certifications</h3></div><div class="card-body" id="dashAccredBody"><div style="color:var(--gray-500);font-size:12px">Upload accreditation PDF to see status.</div></div></div>
+          </div>
+          <div class="card" id="dashRiskCard" style="display:none"><div class="card-header"><h3>🤖 AI Risk Factors & Drawbacks</h3><span id="dashRiskBadge" class="badge"></span></div><div class="card-body" id="dashRiskFactors"></div></div>
+          <div class="card" id="dashSuggestCard" style="display:none"><div class="card-header"><h3>💡 Suggested Actions to Improve Compliance</h3></div><div class="card-body" id="dashSuggestions"></div></div>
+        </div>
+
+        <!-- Upload Disclosures -->
+        <div class="page" id="page-upload-disclosures">
+          <div class="page-header"><h2>Upload Mandatory Disclosures</h2><p>Upload a PDF for each section. AI extracts data, computes risk score, and sends for authority review.</p></div>
+          <div class="alert-banner info">ℹ️ Upload the <b>correct PDF for each section</b>. Uploading a wrong file will be detected and rejected.</div>
+          <div id="uploadProgress" style="display:none" class="alert-banner warn">⏳ Uploading and analyzing PDF... Please wait, AI is processing.</div>
+          <div class="upload-sections-grid" id="uploadSectionsGrid"></div>
+          <div class="card" id="uploadResultCard" style="display:none"><div class="card-header"><h3>✅ Upload Result</h3></div><div class="card-body" id="uploadResultBody"></div></div>
+        </div>
+
+        <!-- My Disclosures -->
+        <div class="page" id="page-my-disclosures">
+          <div class="page-header-row">
+            <div class="page-header"><h2>My Disclosures</h2><p>All uploaded sections with AI extracted data and review status.</p></div>
+            <button class="btn btn-navy btn-sm" onclick="downloadExcel()">📥 Download Excel</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Uploaded Sections</h3><span class="badge badge-analyzed" id="discTotalBadge">0 Uploads</span></div>
+            <div class="card-body-sm" id="disclosuresTableBody"><div style="color:var(--gray-500);text-align:center;padding:32px">No disclosures yet.</div></div>
+          </div>
+        </div>
+
+        <!-- AI Risk Report -->
+        <div class="page" id="page-ai-risk">
+          <div class="page-header-row">
+            <div class="page-header"><h2>AI Risk & Compliance Report</h2><p>Detailed risk analysis with section breakdown and approval probability.</p></div>
+            <button class="btn btn-navy btn-sm" onclick="downloadExcel()">📥 Download Report</button>
+          </div>
+          <div id="aiRiskContent"><div style="text-align:center;padding:60px;color:var(--gray-500)"><div style="font-size:48px;margin-bottom:16px">🤖</div><div style="font-size:18px;font-family:'Rajdhani';color:var(--navy);margin-bottom:8px">No Risk Analysis Yet</div><div>Upload at least one mandatory disclosure PDF to generate AI risk report.</div></div></div>
+        </div>
+
+        <!-- Approval Status -->
+        <div class="page" id="page-approval-status">
+          <div class="page-header"><h2>Approval Status</h2><p>Track your AICTE application review status.</p></div>
+          <div id="approvalStatusContent"><div style="text-align:center;padding:60px;color:var(--gray-500)"><div style="font-size:48px;margin-bottom:16px">📝</div><div style="font-size:18px;font-family:'Rajdhani';color:var(--navy);margin-bottom:8px">No Application Submitted</div><div>Upload all mandatory disclosure PDFs and click <b>Submit for Approval</b> from the dashboard.</div></div></div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="page" id="page-notifications">
+          <div class="page-header"><h2>Notifications</h2><p>All AICTE alerts, upload confirmations, and compliance notifications.</p></div>
+          <div class="card">
+            <div class="card-header"><h3>All Notifications</h3><span class="badge badge-flagged" id="notifUnreadBadge">0 Unread</span></div>
+            <div class="card-body" id="notifBody"><div style="color:var(--gray-500);text-align:center;padding:32px">No notifications yet.</div></div>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="page" id="page-profile">
+          <div class="page-header"><h2>Institution Profile</h2></div>
+          <div class="card">
+            <div class="card-header"><h3 id="profileName">—</h3></div>
+            <div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" id="profileBody"><div style="color:var(--gray-500)">Loading...</div></div></div>
+          </div>
+        </div>
+
+        <!-- Authority Dashboard -->
+        <div class="page" id="page-auth-dashboard">
+          <div class="page-header"><h2>Authority Dashboard</h2><p>AICTE Institution Compliance Overview</p></div>
+          <div class="stats-grid">
+            <div class="stat-card blue"><div class="sc-label">Total Institutions</div><div class="sc-value" id="ath-total">—</div><div class="sc-icon">🏛️</div></div>
+            <div class="stat-card amber"><div class="sc-label">Pending Reviews</div><div class="sc-value" id="ath-pending">—</div><div class="sc-icon">⏳</div></div>
+            <div class="stat-card green"><div class="sc-label">Approved</div><div class="sc-value" id="ath-approved">—</div><div class="sc-icon">✅</div></div>
+            <div class="stat-card red"><div class="sc-label">Rejected</div><div class="sc-value" id="ath-rejected">—</div><div class="sc-icon">❌</div></div>
+            <div class="stat-card red"><div class="sc-label">High Risk</div><div class="sc-value" id="ath-high">—</div><div class="sc-icon">🚩</div></div>
+            <div class="stat-card amber"><div class="sc-label">Medium Risk</div><div class="sc-value" id="ath-medium">—</div><div class="sc-icon">⚠️</div></div>
+          </div>
+          <div class="charts-grid">
+            <div class="card"><div class="card-header"><h3>Risk Distribution</h3></div><div class="card-body"><div class="chart-container"><canvas id="riskDistChart"></canvas></div></div></div>
+            <div class="card"><div class="card-header"><h3>Approval Status Distribution</h3></div><div class="card-body"><div class="chart-container"><canvas id="approvalDistChart"></canvas></div></div></div>
+          </div>
+          <div class="card"><div class="card-header"><h3>🔴 High Risk Institutions</h3></div><div class="card-body-sm" id="authHighRiskBody"><div style="color:var(--gray-500);text-align:center;padding:20px">Loading...</div></div></div>
+        </div>
+
+        <!-- Authority Pending Reviews -->
+        <div class="page" id="page-auth-pending">
+          <div class="page-header"><h2>Pending Review Applications</h2><p>Review institution submissions and issue approval decisions.</p></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <button class="btn btn-navy btn-sm" onclick="loadPendingReviews('submitted')">⏳ Submitted</button>
+            <button class="btn btn-amber btn-sm" onclick="loadPendingReviews('under_review')">🔍 Under Review</button>
+            <button class="btn btn-green btn-sm" onclick="loadPendingReviews('approved')">✅ Approved</button>
+            <button class="btn btn-red btn-sm" onclick="loadPendingReviews('rejected')">❌ Rejected</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--navy);border-color:var(--border)" onclick="loadPendingReviews('')">All</button>
+          </div>
+          <div id="pendingReviewsBody"><div style="color:var(--gray-500);text-align:center;padding:32px">Loading reviews...</div></div>
+        </div>
+
+        <!-- Authority All Institutions -->
+        <div class="page" id="page-auth-institutions">
+          <div class="page-header"><h2>All Institutions</h2><p>Complete list sorted by risk score.</p></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <input type="text" id="authSearch" onkeyup="filterAuthTable()" placeholder="🔍 Search by name or state..." style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px">
+            <select id="authRiskFilter" onchange="filterAuthTable()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px"><option value="">All Risk Levels</option><option value="High">High Risk</option><option value="Medium">Medium Risk</option><option value="Low">Low Risk</option></select>
+            <select id="authApprovalFilter" onchange="filterAuthTable()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px"><option value="">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Institutions</h3><span class="badge badge-analyzed" id="authInstCount">0</span></div>
+            <div class="card-body-sm" id="authInstBody"><div style="color:var(--gray-500);text-align:center;padding:32px">Loading...</div></div>
+          </div>
+        </div>
+
+        <!-- Authority Analytics -->
+        <div class="page" id="page-auth-analytics">
+          <div class="page-header"><h2>Analytics & Monitoring</h2><p>Region-wide compliance statistics.</p></div>
+          <div class="charts-grid">
+            <div class="card"><div class="card-header"><h3>Risk Distribution</h3></div><div class="card-body"><div class="chart-container"><canvas id="analyticsRiskChart"></canvas></div></div></div>
+            <div class="card"><div class="card-header"><h3>Institutions by State</h3></div><div class="card-body"><div class="chart-container"><canvas id="analyticsStateChart"></canvas></div></div></div>
+          </div>
+        </div>
+
+      </div><!-- end main-content -->
+    </div><!-- end app-body -->
+
+    <div class="gov-footer">
+      <div>© 2025 All India Council for Technical Education | Ministry of Education</div>
+      <div>Version 5.0.0 | <a>Terms of Use</a> | <a>Privacy Policy</a></div>
+    </div>
+
+  </div><!-- end #app -->
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="reviewModalTitle">Review Application</h3>
+        <span class="modal-close" onclick="closeReviewModal()">×</span>
+      </div>
+      <div class="modal-body" id="reviewModalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-green" id="approveBtn" onclick="submitReview('approve')">✅ Approve Application</button>
+        <button class="btn btn-red" id="rejectBtn" onclick="submitReview('reject')">❌ Reject Application</button>
+        <button class="btn btn-navy" onclick="closeReviewModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══ FORGOT PASSWORD MODAL ═══ -->
+<div class="modal-overlay" id="forgotModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h3 id="forgotModalTitle">🔑 Forgot Password</h3>
+      <span class="modal-close" onclick="closeForgotModal()">×</span>
+    </div>
+    <div class="modal-body" id="forgotModalBody">
+
+      <!-- STEP 1: Enter Email -->
+      <div id="forgot-step1">
+        <div class="alert-banner info">ℹ️ Enter your registered institution email. We'll send an OTP to reset your password.</div>
+        <div id="forgotErr1" class="alert-banner danger" style="display:none"></div>
+        <div class="form-group">
+          <label>Registered Email *</label>
+          <div style="display:flex;gap:8px">
+            <input id="forgotEmail" type="email" placeholder="principal@institution.ac.in" style="flex:1">
+            <button id="forgotSendOtpBtn" onclick="forgotSendOTP()" class="btn btn-saffron" style="white-space:nowrap;padding:10px 14px;font-size:13px">
+              📧 Send OTP
+            </button>
+          </div>
+          <div id="forgotOtpSentMsg" style="display:none;margin-top:6px;font-size:12px;color:var(--green-india);font-weight:600">
+            ✅ OTP sent! Check your inbox (also check spam).
+          </div>
+        </div>
+        <button class="btn btn-saffron btn-block" onclick="forgotProceedToVerify()">PROCEED TO VERIFY →</button>
+      </div>
+
+      <!-- STEP 2: Verify OTP -->
+      <div id="forgot-step2" style="display:none">
+        <div class="alert-banner info">📧 Enter the 6-digit OTP sent to <b id="forgotEmailDisplay">—</b></div>
+        <div id="forgotErr2" class="alert-banner danger" style="display:none"></div>
+        <div class="form-group" style="text-align:center">
+          <label style="text-align:left;display:block">Enter 6-Digit OTP *</label>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:8px" id="forgotOtpBoxes">
+            <input class="otp-box" id="fotp0" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,0)" oninput="forgotOtpInput(event,0)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            <input class="otp-box" id="fotp1" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,1)" oninput="forgotOtpInput(event,1)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            <input class="otp-box" id="fotp2" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,2)" oninput="forgotOtpInput(event,2)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            <input class="otp-box" id="fotp3" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,3)" oninput="forgotOtpInput(event,3)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            <input class="otp-box" id="fotp4" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,4)" oninput="forgotOtpInput(event,4)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+            <input class="otp-box" id="fotp5" maxlength="1" type="text" inputmode="numeric" onkeyup="forgotOtpKeyUp(event,5)" oninput="forgotOtpInput(event,5)" style="width:48px;height:56px;text-align:center;font-size:24px;font-weight:700;font-family:'Rajdhani';border:2px solid var(--border);border-radius:6px;outline:none;color:var(--navy)">
+          </div>
+        </div>
+        <div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--gray-500)">
+          Didn't receive OTP?
+          <span id="forgotResendCountdown" style="font-weight:700;color:var(--amber)"> Resend in <span id="forgotCountdownSec">30</span>s</span>
+          <a id="forgotResendLink" onclick="forgotResendOTP()" style="display:none;color:var(--saffron);cursor:pointer;font-weight:700"> Resend OTP</a>
+        </div>
+        <button class="btn btn-saffron btn-block" onclick="forgotVerifyOTP()">VERIFY OTP →</button>
+        <button class="btn btn-outline btn-block" onclick="forgotBackToStep1()" style="margin-top:8px;color:var(--navy);border-color:var(--border)">← Change Email</button>
+      </div>
+
+      <!-- STEP 3: Set New Password -->
+      <div id="forgot-step3" style="display:none">
+        <div class="alert-banner success">✅ OTP verified! Set your new password below.</div>
+        <div id="forgotErr3" class="alert-banner danger" style="display:none"></div>
+        <div class="form-group">
+          <label>New Password *</label>
+          <input id="forgotNewPass" type="password" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password *</label>
+          <input id="forgotConfirmPass" type="password" placeholder="Re-enter new password">
+        </div>
+        <button class="btn btn-green btn-block" id="forgotResetBtn" onclick="forgotResetPassword()">
+          🔒 RESET PASSWORD
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <!-- Hidden PDF upload input -->
+  <input type="file" id="hiddenFileInput" accept=".pdf" style="display:none" onchange="handleFileSelected(event)">
+
+  <!-- ════ JAVASCRIPT FILES (load order matters) ════ -->
+  <script src="js/config.js"></script>
+<script src="js/forgot-password.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/upload.js"></script>
+  <script src="js/institution.js"></script>
+  <script src="js/authority.js"></script>
+
+</body>
+</html>

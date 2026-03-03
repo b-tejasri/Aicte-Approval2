@@ -1,0 +1,114 @@
+<!-- pages/authority-pages.html — All authority portal pages -->
+
+<!-- ═══ AUTHORITY DASHBOARD ═══ -->
+<div class="page" id="page-auth-dashboard">
+  <div class="page-header">
+    <h2>Authority Dashboard</h2>
+    <p>AICTE Institution Compliance Overview</p>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="sc-label">Total Institutions</div><div class="sc-value" id="ath-total">—</div><div class="sc-icon">🏛️</div></div>
+    <div class="stat-card amber"><div class="sc-label">Pending Reviews</div><div class="sc-value" id="ath-pending">—</div><div class="sc-icon">⏳</div></div>
+    <div class="stat-card green"><div class="sc-label">Approved</div><div class="sc-value" id="ath-approved">—</div><div class="sc-icon">✅</div></div>
+    <div class="stat-card red"><div class="sc-label">Rejected</div><div class="sc-value" id="ath-rejected">—</div><div class="sc-icon">❌</div></div>
+    <div class="stat-card red"><div class="sc-label">High Risk</div><div class="sc-value" id="ath-high">—</div><div class="sc-icon">🚩</div></div>
+    <div class="stat-card amber"><div class="sc-label">Medium Risk</div><div class="sc-value" id="ath-medium">—</div><div class="sc-icon">⚠️</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-header"><h3>Risk Distribution</h3></div>
+      <div class="card-body"><div class="chart-container"><canvas id="riskDistChart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Approval Status Distribution</h3></div>
+      <div class="card-body"><div class="chart-container"><canvas id="approvalDistChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- High Risk Table -->
+  <div class="card">
+    <div class="card-header"><h3>🔴 High Risk Institutions</h3></div>
+    <div class="card-body-sm" id="authHighRiskBody">
+      <div style="color:var(--gray-500);text-align:center;padding:20px">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUTHORITY PENDING REVIEWS ═══ -->
+<div class="page" id="page-auth-pending">
+  <div class="page-header">
+    <h2>Pending Review Applications</h2>
+    <p>Review institution submissions and issue approval decisions.</p>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn btn-navy btn-sm" onclick="loadPendingReviews('submitted')">⏳ Submitted</button>
+    <button class="btn btn-amber btn-sm" onclick="loadPendingReviews('under_review')">🔍 Under Review</button>
+    <button class="btn btn-green btn-sm" onclick="loadPendingReviews('approved')">✅ Approved</button>
+    <button class="btn btn-red btn-sm" onclick="loadPendingReviews('rejected')">❌ Rejected</button>
+    <button class="btn btn-outline btn-sm" style="color:var(--navy);border-color:var(--border)" onclick="loadPendingReviews('')">All</button>
+  </div>
+  <div id="pendingReviewsBody">
+    <div style="color:var(--gray-500);text-align:center;padding:32px">Loading reviews...</div>
+  </div>
+</div>
+
+<!-- ═══ AUTHORITY ALL INSTITUTIONS ═══ -->
+<div class="page" id="page-auth-institutions">
+  <div class="page-header">
+    <h2>All Institutions</h2>
+    <p>Complete list sorted by risk score.</p>
+  </div>
+
+  <!-- Filters -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <input type="text" id="authSearch" onkeyup="filterAuthTable()"
+      placeholder="🔍 Search by name or state..."
+      style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px">
+    <select id="authRiskFilter" onchange="filterAuthTable()"
+      style="padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px">
+      <option value="">All Risk Levels</option>
+      <option value="High">High Risk</option>
+      <option value="Medium">Medium Risk</option>
+      <option value="Low">Low Risk</option>
+    </select>
+    <select id="authApprovalFilter" onchange="filterAuthTable()"
+      style="padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;font-size:13px">
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Institutions</h3>
+      <span class="badge badge-analyzed" id="authInstCount">0</span>
+    </div>
+    <div class="card-body-sm" id="authInstBody">
+      <div style="color:var(--gray-500);text-align:center;padding:32px">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUTHORITY ANALYTICS ═══ -->
+<div class="page" id="page-auth-analytics">
+  <div class="page-header">
+    <h2>Analytics & Monitoring</h2>
+    <p>Region-wide compliance statistics.</p>
+  </div>
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-header"><h3>Risk Distribution</h3></div>
+      <div class="card-body"><div class="chart-container"><canvas id="analyticsRiskChart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Institutions by State</h3></div>
+      <div class="card-body"><div class="chart-container"><canvas id="analyticsStateChart"></canvas></div></div>
+    </div>
+  </div>
+</div>
