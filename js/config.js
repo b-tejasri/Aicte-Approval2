@@ -2,7 +2,7 @@
    js/config.js — Global Config, State & Constants
    ═══════════════════════════════════════════════════════ */
 
-const API = 'http://127.0.0.1:8000/vvit';
+const API = 'https://api2.chandus7.in/vvit';
 
 // ── Global State ──────────────────────────────────────
 let currentRole = '';
